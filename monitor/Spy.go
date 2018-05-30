@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"io/ioutil"
+	"math/rand"
 )
 
 
@@ -17,6 +18,22 @@ const (
 	MAC
 	LINUX
 )
+
+//代理
+var userAgent = [...]string{"Mozilla/5.0 (compatible, MSIE 10.0, Windows NT, DigExt)",
+	"Mozilla/4.0 (compatible, MSIE 7.0, Windows NT 5.1, 360SE)",
+	"Mozilla/4.0 (compatible, MSIE 8.0, Windows NT 6.0, Trident/4.0)",
+	"Mozilla/5.0 (compatible, MSIE 9.0, Windows NT 6.1, Trident/5.0,",
+	"Opera/9.80 (Windows NT 6.1, U, en) Presto/2.8.131 Version/11.11",
+	"Mozilla/4.0 (compatible, MSIE 7.0, Windows NT 5.1, TencentTraveler 4.0)",
+	"Mozilla/5.0 (Windows, U, Windows NT 6.1, en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
+	"Mozilla/5.0 (Macintosh, Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11",
+	"Mozilla/5.0 (Macintosh, U, Intel Mac OS X 10_6_8, en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
+	"Mozilla/5.0 (Linux, U, Android 3.0, en-us, Xoom Build/HRI39) AppleWebKit/534.13 (KHTML, like Gecko) Version/4.0 Safari/534.13",
+	"Mozilla/5.0 (iPad, U, CPU OS 4_3_3 like Mac OS X, en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5",
+	"Mozilla/4.0 (compatible, MSIE 7.0, Windows NT 5.1, Trident/4.0, SE 2.X MetaSr 1.0, SE 2.X MetaSr 1.0, .NET CLR 2.0.50727, SE 2.X MetaSr 1.0)",
+	"Mozilla/5.0 (iPhone, U, CPU iPhone OS 4_3_3 like Mac OS X, en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5",
+	"MQQBrowser/26 Mozilla/5.0 (Linux, U, Android 2.3.7, zh-cn, MB200 Build/GRJ22, CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"}
 
 type Game struct {
 	Id int
@@ -36,12 +53,16 @@ type MonitorContent struct {
 
 //获取网页内容
 func GetContent(url string) ( contents []MonitorContent){
-	resp,err := http.Get(url)
-	if err!=nil {
-		fmt.Println("httpGetError:",err.Error())
+	request,_ := http.NewRequest("GET",url,nil)
+	request.Header.Set("User-Agent", getRandomUserAgent())
+	client := http.DefaultClient
+	res, err := client.Do(request)
+	if err != nil {
+		fmt.Errorf("Get请求返回错误:", url, err.Error())
+		return
 	}
-	if resp.StatusCode==200 {
-		body := resp.Body
+	if res.StatusCode==200 {
+		body := res.Body
 		contents = finTargetedContent(body)
 		defer body.Close()
 	}
@@ -116,12 +137,16 @@ func formatDate(dateStr string) (formatStr string){
 
 //将游戏的图标保存到本地
 func downPicture(pictureUrl string,gameIdStr string)(localUrl string){
-	resp,err := http.Get(pictureUrl)
-	if err!=nil {
-		fmt.Println("downPicture:",err.Error())
+	request,_ := http.NewRequest("GET",pictureUrl,nil)
+	request.Header.Set("User-Agent", getRandomUserAgent())
+	client := http.DefaultClient
+	res, err := client.Do(request)
+	if err != nil {
+		fmt.Errorf("Get请求返回错误:", pictureUrl, err.Error())
+		return
 	}
-	if resp.StatusCode==200 {
-		body := resp.Body
+	if res.StatusCode==200 {
+		body := res.Body
 		contents,_ := ioutil.ReadAll(body)
 		localUrl = "/resource/images/"+gameIdStr+".jpg"
 		err := ioutil.WriteFile(".."+localUrl, contents, 0666) //写入文件(字节数组)
@@ -131,5 +156,10 @@ func downPicture(pictureUrl string,gameIdStr string)(localUrl string){
 		defer body.Close()
 	}
 	return
+}
+
+//利用随机数，随机获取一个代理
+func getRandomUserAgent() string {
+	return userAgent[rand.Intn(len(userAgent))]
 }
 
