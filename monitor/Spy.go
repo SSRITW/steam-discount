@@ -39,19 +39,19 @@ var userAgent = [...]string{"Mozilla/5.0 (compatible, MSIE 10.0, Windows NT, Dig
 	"MQQBrowser/26 Mozilla/5.0 (Linux, U, Android 2.3.7, zh-cn, MB200 Build/GRJ22, CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"}
 
 type Game struct {
-	Id int
-	Name string
-	PayUrl string
-	Thumbnail string
-	Price float64
-	IssueDate string
-	SupportPlatforms []int
+	Id int `redis:"id"`
+	Name string	`redis:"name"`
+	PayUrl string `redis:"payUrl"`
+	Thumbnail string `redis:"thumbnail"`
+	Price float64 `redis:"price"`
+	IssueDate string `redis:"issueDate"`
+	SupportPlatforms []int `redis:"dupportPlatforms"`
 }
 
 type MonitorContent struct {
 	Game
-	Off string
-	AtferOffPrice float64
+	Off string `redis:"off"`
+	AtferOffPrice float64 `redis:"atferOffPrice"`
 }
 
 //获取网页内容
@@ -61,7 +61,7 @@ func GetContent(url string , contents chan MonitorContent,pageSize chan int,maxC
 			fmt.Println("getContentPanic", r)
 		}
 	}()
-	fmt.Println("now is ",url)
+	//fmt.Println("now is ",url)
 	request,_ := http.NewRequest("GET",url,nil)
 	request.Header.Set("User-Agent", getRandomUserAgent())
 	client := http.DefaultClient
@@ -178,7 +178,7 @@ func downPicture(pictureUrl string,gameIdStr string)(localUrl string){
 		body := res.Body
 		contents,_ := ioutil.ReadAll(body)
 		localUrl = "/resource/images/"+gameIdStr+".jpg"
-		err := ioutil.WriteFile(".."+localUrl, contents, 0666) //写入文件(字节数组)
+		err := ioutil.WriteFile("."+localUrl, contents, 0666) //写入文件(字节数组)
 		if err!=nil {
 			fmt.Println("downPicture:",err.Error())
 		}
@@ -192,6 +192,7 @@ func getRandomUserAgent() string {
 	return userAgent[rand.Intn(len(userAgent))]
 }
 
+//获取最大页码和内容总条数
 func getPageSizeAndMaxContentSize(reader *goquery.Document)(pageSize int ,maxContentSize int){
 	contentSizeStr := reader.Find("#search_result_container .search_pagination .search_pagination_left").Text()
 
