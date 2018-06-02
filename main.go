@@ -1,6 +1,9 @@
 package main
 
-import "steam-discount/monitor"
+import (
+	"steam-discount/monitor"
+	"time"
+)
 
 func main(){
 	initData()
@@ -15,5 +18,5 @@ func initData(){
 
 	go monitor.GetContent("https://store.steampowered.com/search/?specials=1",contentChannel,pageSizeChannel,maxContentSize)
 
-	monitor.SaveContents(contentChannel,maxContentSize)
+	monitor.SaveContents(contentChannel,maxContentSize,time.Second*30)
 }
