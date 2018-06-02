@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"github.com/garyburd/redigo/redis"
 	"fmt"
+	"encoding/json"
 )
 
 //当pageChan有值时才进行读操作（即，进行第一次爬虫获取到这个值的时候；启动多个goroutine继续爬取之后的页面数据
@@ -36,9 +37,11 @@ func SaveContents(contentChannel chan MonitorContent,maxContentSize chan int){
 	}
 	for v := range contentChannel{
 		i++
-		_,err := c.Do("ZADD","gameContent",v.Id,v)	 //将内容放到redis里
+		data , _ := json.Marshal(v)
+		_,err := c.Do("HMSET","gameContent",strconv.Itoa(v.Id),string(data))	 //把id作为key，将struct内容转化为json字符串作为value，放到redis里
 		if err!=nil {
 			fmt.Println("redis error:",err.Error())
+			panic(err)
 		}
 		/*else{
 			fmt.Println("reply:",reply)
