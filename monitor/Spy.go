@@ -123,7 +123,8 @@ func finTargetedContent(content io.Reader,contents chan MonitorContent,pageSize 
 		content.Name = name
 		content.PayUrl = payUrl
 		content.Thumbnail = downPicture(thumbnail,id)
-		content.IssueDate = formatDate(issueDate)
+		//content.IssueDate = formatDate(issueDate)  日期格式太多样化了所以决定不格式化日期
+		content.IssueDate = issueDate
 		//去除分行符和空格、‘-’和‘%’符号
 		content.Off = strings.TrimSpace(off)
 		if content.Off!="" {
